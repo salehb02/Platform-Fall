@@ -16,17 +16,30 @@ public class GameManager : MonoBehaviour
     public bool newPlatformReady;
     private Vector3 _previousPos;
     private int _currentPlatformNumber = 1;
+    public bool timerOn = true;
+
+    public static string FLOOR_TAG = "Floor";
+    private Player _player;
+
+    private void Start()
+    {
+        _player = FindObjectOfType<Player>();
+    }
 
     private void Update()
     {
-        if (enemies.Count < baseEnemyCount + addEnemyCountPerPlatform * _currentPlatformNumber)
+        if (enemies.Count < (baseEnemyCount + addEnemyCountPerPlatform * _currentPlatformNumber) / 2)
             newPlatformReady = true;
         else
             newPlatformReady = false;
+
+        if(_player.dead)
+            timerOn = false;
     }
 
     public void NewPlatform()
     {
+        /// Spawn Platform
         float newPos = Random.value;
         Vector3 newPosVector = Vector3.zero;
 
@@ -46,18 +59,7 @@ public class GameManager : MonoBehaviour
         }
 
         currentPlatform = Instantiate(platform, currentPlatform.transform.position + newPosVector, Quaternion.identity, transform);
-
-        List<GameObject> currectSpawnPoints = currentPlatform.GetComponent<Platform>().enemySpawnPoints;
-
-        for (int i = 0; i < baseEnemyCount + addEnemyCountPerPlatform * _currentPlatformNumber; i++)
-        {
-            int randomSpawnPoint = Random.Range(0, currectSpawnPoints.Count);
-            GameObject currentPoint = currectSpawnPoints[randomSpawnPoint];
-            currectSpawnPoints.RemoveAt(randomSpawnPoint);
-
-            GameObject enemy = Instantiate(enemyPrefab, currentPoint.transform.position, currentPoint.transform.rotation, transform);
-            enemies.Add(enemy);
-        }
+        currentPlatform.GetComponent<Platform>().currectPlatformNumber = _currentPlatformNumber;
 
         _currentPlatformNumber++;
         _previousPos = newPosVector;

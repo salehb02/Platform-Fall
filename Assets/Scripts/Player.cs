@@ -15,7 +15,9 @@ public class Player : MonoBehaviour
     public float bulletForce;
     public AudioSource shootSFX;
 
-    private const string FloorTag = "Floor";
+    [Header("Health")]
+    public bool dead;
+
     private Rigidbody _rigid;
 
     #region Engine
@@ -26,11 +28,17 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (dead)
+            return;
+
         Movement();
     }
 
     private void Update()
     {
+        if (dead)
+            return;
+
         Inputs();
         Shoot();
     }
@@ -49,6 +57,9 @@ public class Player : MonoBehaviour
             _rigid.AddForce(transform.rotation * Vector3.forward * moveForce * _verticalInput);
 
         transform.Rotate(0, _horizontalInput * turnSpeed, 0);
+
+        if (transform.position.y < -1f)
+            Die();
     }
     #endregion
 
@@ -57,7 +68,7 @@ public class Player : MonoBehaviour
     private void OnCollisionStay(Collision collision) => CheckGrounded(collision);
     private void CheckGrounded(Collision collision)
     {
-        if (collision.collider.CompareTag(FloorTag))
+        if (collision.collider.CompareTag(GameManager.FLOOR_TAG))
         {
             if (collision.contactCount > 0)
                 grounded = true;
@@ -78,4 +89,9 @@ public class Player : MonoBehaviour
         }
     }
     #endregion
+
+    private void Die()
+    {
+        dead = true;
+    }
 }

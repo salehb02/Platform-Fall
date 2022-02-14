@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -9,30 +10,35 @@ public class Enemy : MonoBehaviour
 
     private Player _player;
     private Rigidbody _rigid;
-    private const string FloorTag = "Floor";
-    private float _destroyTimer = 5f;
+    private bool _destroyed;
+    private GameManager _gameManager;
 
     void Start()
     {
+        _gameManager = FindObjectOfType<GameManager>();
         _rigid = GetComponent<Rigidbody>();
-        _player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        _player = FindObjectOfType<Player>();
     }
 
     private void Update()
     {
+        if (_player.dead)
+            return;
+
         PlayerLookAt();
 
-        if (!grounded)
-            _destroyTimer -= Time.deltaTime;
-        else
-            _destroyTimer = 5f;
-
-        if(_destroyTimer <= 0)
-            Destroy(gameObject);
+        if (transform.position.y < -1 && !_destroyed)
+        {
+            _destroyed = true;
+            StartCoroutine(Kill());
+        }
     }
 
     private void FixedUpdate()
     {
+        if (_player.dead)
+            return;
+
         Movement();
     }
 
@@ -51,12 +57,19 @@ public class Enemy : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(newDirection);
     }
 
+    private IEnumerator Kill()
+    {
+        _gameManager.enemies.Remove(gameObject);
+        yield return new WaitForSeconds(5);
+        Destroy(gameObject);
+    }
+
     #region Grounded Check
     private void OnCollisionExit(Collision collision) => CheckGrounded(collision);
     private void OnCollisionStay(Collision collision) => CheckGrounded(collision);
     private void CheckGrounded(Collision collision)
     {
-        if (collision.collider.CompareTag(FloorTag))
+        if (collision.collider.CompareTag(GameManager.FLOOR_TAG))
         {
             if (collision.contactCount > 0)
                 grounded = true;
