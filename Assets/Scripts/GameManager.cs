@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -23,6 +24,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+    }
+
+    private void OnClientConnected(ulong obj)
+    {
         _player = FindObjectOfType<Player>();
     }
 
@@ -32,6 +38,9 @@ public class GameManager : MonoBehaviour
             newPlatformReady = true;
         else
             newPlatformReady = false;
+
+        if (_player == null)
+            return;
 
         if(_player.dead)
             timerOn = false;
